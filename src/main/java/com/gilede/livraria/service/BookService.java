@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -108,7 +109,7 @@ public class BookService {
         List<BookDTOs.BookResponse> result = new ArrayList<>();
 
         for (BookDTOs.MlSyncItem item : items) {
-            Book book = bookRepository.findByMlId(item.id()).orElse(null);
+            Optional<Book> existingBook = bookRepository.findByMlId(item.id());
 
             String author = extractAttribute(item.attributes(), "author");
             String isbn = extractAttribute(item.attributes(), "isbn");
@@ -116,7 +117,15 @@ public class BookService {
                     ? List.of()
                     : item.pictures().stream().map(BookDTOs.MlPicture::url).toList();
 
-            if (book == null) {
+            Book book;
+            if (existingBook.isPresent()) {
+                book = existingBook.get();
+            book.setTitle(item.title());
+            book.setPrice(item.price());
+            book.setStock(item.available_quantity());
+            book.setImages(images);
+            book.setMlSynced(true);
+            } else {
                 book = Book.builder()
                         .title(item.title())
                         .author(author != null ? author : "Desconhecido")
@@ -130,12 +139,6 @@ public class BookService {
                         .mlSynced(true)
                         .isbn(isbn)
                         .build();
-            } else {
-                book.setTitle(item.title());
-                book.setPrice(item.price());
-                book.setStock(item.available_quantity());
-                book.setImages(images);
-                book.setMlSynced(true);
             }
 
             result.add(bookMapper.toResponse(bookRepository.save(book)));

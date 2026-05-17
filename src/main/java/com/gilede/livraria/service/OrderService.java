@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -54,11 +55,17 @@ public class OrderService {
      */
     @Transactional
     public OrderDTOs.OrderResponse create(OrderDTOs.CreateOrderRequest request) {
+        Objects.requireNonNull(request, "Requisição de pedido é obrigatória");
+        Objects.requireNonNull(request.items(), "Itens do pedido são obrigatórios");
+        Objects.requireNonNull(request.address(), "Endereço do pedido é obrigatório");
+
         List<OrderItem> items = new ArrayList<>();
         BigDecimal subtotal = BigDecimal.ZERO;
+        OrderDTOs.AddressRequest address = request.address();
 
         // Construção dos itens e validação de estoque
         for (OrderDTOs.CartItemRequest cartItem : request.items()) {
+            Objects.requireNonNull(cartItem, "Item do pedido é obrigatório");
             UUID bookId = UUID.fromString(cartItem.bookId());
             Book book = bookRepository.findById(bookId)
                     .orElseThrow(() -> new EntityNotFoundException("Livro não encontrado: " + bookId));
@@ -93,13 +100,13 @@ public class OrderService {
                 .customerName(request.customerName())
                 .customerEmail(request.customerEmail())
                 .customerPhone(request.customerPhone())
-                .addressStreet(request.address().street())
-                .addressNumber(request.address().number())
-                .addressComplement(request.address().complement())
-                .addressNeighborhood(request.address().neighborhood())
-                .addressCity(request.address().city())
-                .addressState(request.address().state())
-                .addressZipCode(request.address().zipCode())
+            .addressStreet(address.street())
+            .addressNumber(address.number())
+            .addressComplement(address.complement())
+            .addressNeighborhood(address.neighborhood())
+            .addressCity(address.city())
+            .addressState(address.state())
+            .addressZipCode(address.zipCode())
                 .paymentMethod(paymentMethod)
                 .total(total)
                 .discount(discount)
