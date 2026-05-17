@@ -55,6 +55,7 @@ public class SecurityConfig {
                         // ---- Endpoints 100% públicos ----
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/logout").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/health").permitAll()
 
                         // Catálogo público de livros
                         .requestMatchers(HttpMethod.GET, "/books").permitAll()
