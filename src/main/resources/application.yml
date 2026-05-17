@@ -15,7 +15,7 @@ spring:
       max-lifetime: 1200000
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
     open-in-view: false
     properties:
@@ -24,6 +24,9 @@ spring:
         default_schema: public
         format_sql: false
         physical_naming_strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+  sql:
+    init:
+      mode: always
   jackson:
     default-property-inclusion: non_null
     serialization:
@@ -35,6 +38,11 @@ app:
     expiration-ms: 86400000
   cors:
     allowed-origins: ${FRONTEND_URL:http://localhost:3000},http://localhost:5173
+
+ml:
+  client-id: ${ML_CLIENT_ID:}
+  client-secret: ${ML_CLIENT_SECRET:}
+  redirect-uri: ${ML_REDIRECT_URI:}
 
 logging:
   level:

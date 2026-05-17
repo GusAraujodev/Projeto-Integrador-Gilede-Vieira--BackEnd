@@ -1,0 +1,368 @@
+package com.gilede.livraria.service;
+
+import com.gilede.livraria.dto.MercadoLivreDTOs.Attribute;
+import com.gilede.livraria.dto.MercadoLivreDTOs.BatchItemResult;
+import com.gilede.livraria.dto.MercadoLivreDTOs.ItemDescription;
+import com.gilede.livraria.dto.MercadoLivreDTOs.ItemDetail;
+import com.gilede.livraria.dto.MercadoLivreDTOs.ItemSearchResponse;
+import com.gilede.livraria.dto.MercadoLivreDTOs.Paging;
+import com.gilede.livraria.dto.MercadoLivreDTOs.Picture;
+import com.gilede.livraria.dto.MercadoLivreDTOs.TokenResponse;
+import com.gilede.livraria.model.Book;
+import com.gilede.livraria.model.MercadoLivreConfig;
+import com.gilede.livraria.repository.BookRepository;
+import com.gilede.livraria.repository.MercadoLivreConfigRepository;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class MercadoLivreService {
+
+    private static final String SELLER_ID = "1635399587";
+    private static final int SEARCH_PAGE_SIZE = 50;
+    private static final int BATCH_SIZE = 20;
+    private static final long RATE_LIMIT_DELAY_MS = 50L;
+    private static final String TOKEN_URL = "https://api.mercadolibre.com/oauth/token";
+    private static final String ITEMS_SEARCH_URL = "https://api.mercadolibre.com/users/%s/items/search";
+    private static final String ITEM_BATCH_URL = "https://api.mercadolibre.com/items";
+    private static final String ITEM_DESCRIPTION_URL = "https://api.mercadolibre.com/items/%s/description";
+
+    private final MercadoLivreConfigRepository configRepository;
+    private final BookRepository bookRepository;
+    private final RestTemplate restTemplate;
+
+    @Value("${ml.client-id:}")
+    private String clientId;
+
+    @Value("${ml.client-secret:}")
+    private String clientSecret;
+
+    @Value("${ml.redirect-uri:}")
+    private String redirectUri;
+
+    @Transactional
+    public MercadoLivreConfig exchangeCodeForTokens(@NonNull String code) {
+        validateMlCredentials();
+        log.info("Exchanging Mercado Livre authorization code for tokens");
+
+        LinkedMultiValueMap<String, String> form = formData("authorization_code");
+        form.add("code", code);
+        form.add("redirect_uri", redirectUri);
+
+        TokenResponse tokenResponse = requestToken(form);
+        return saveTokens(tokenResponse);
+    }
+
+    public MercadoLivreConfig exchangeAuthorizationCode(String code) {
+        return exchangeCodeForTokens(code);
+    }
+
+    @Transactional
+    public MercadoLivreConfig refreshAccessToken() {
+        validateMlCredentials();
+        MercadoLivreConfig config = getConfigOrThrow();
+
+        if (!StringUtils.hasText(config.getRefreshToken())) {
+            throw new IllegalStateException("Refresh token ausente. Refaça a autenticação do Mercado Livre.");
+        }
+
+        log.info("Refreshing Mercado Livre access token for seller {}", config.getSellerId());
+        LinkedMultiValueMap<String, String> form = formData("refresh_token");
+        form.add("refresh_token", config.getRefreshToken());
+
+        TokenResponse tokenResponse = requestToken(form);
+        return saveTokens(tokenResponse);
+    }
+
+    public String getValidAccessToken() {
+        MercadoLivreConfig config = getConfigOrThrow();
+        if (config.isExpired()) {
+            log.info("Mercado Livre token expired or near expiration, refreshing automatically");
+            config = refreshAccessToken();
+        }
+
+        if (!StringUtils.hasText(config.getAccessToken())) {
+            throw new IllegalStateException("Token de acesso do Mercado Livre indisponível.");
+        }
+
+        return config.getAccessToken();
+    }
+
+    public int syncCatalog() {
+        String accessToken = getValidAccessToken();
+        List<String> itemIds = fetchActiveItemIds(accessToken);
+        int processedBooks = 0;
+
+        for (List<String> batch : partition(itemIds, BATCH_SIZE)) {
+            List<BatchItemResult> batchResults = fetchBatchItems(batch, accessToken);
+
+            for (BatchItemResult result : batchResults) {
+                if (result == null || result.code() == null || result.code() < 200 || result.code() >= 300 || result.body() == null) {
+                    continue;
+                }
+
+                String itemId = result.body().id();
+                if (!StringUtils.hasText(itemId)) {
+                    continue;
+                }
+
+                String description = fetchDescription(itemId, accessToken);
+                upsertBook(itemId, result.body(), description);
+                processedBooks++;
+
+                try {
+                    Thread.sleep(RATE_LIMIT_DELAY_MS);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    throw new IllegalStateException("Sincronização do Mercado Livre interrompida", ex);
+                }
+            }
+        }
+
+        log.info("Mercado Livre sync completed with {} books processed", processedBooks);
+        return processedBooks;
+    }
+
+    private MercadoLivreConfig saveTokens(@NonNull TokenResponse tokenResponse) {
+        MercadoLivreConfig config = configRepository.findTopByOrderByIdDesc().orElseGet(MercadoLivreConfig::new);
+        config.setSellerId(SELLER_ID);
+        config.setAccessToken(tokenResponse.accessToken());
+
+        if (StringUtils.hasText(tokenResponse.refreshToken())) {
+            config.setRefreshToken(tokenResponse.refreshToken());
+        } else if (!StringUtils.hasText(config.getRefreshToken())) {
+            throw new IllegalStateException("Mercado Livre não retornou refresh_token válido.");
+        }
+
+        long expiresIn = tokenResponse.expiresIn() != null ? tokenResponse.expiresIn() : 3600L;
+        config.setExpiresAt(LocalDateTime.now().plusSeconds(expiresIn));
+
+        MercadoLivreConfig saved = configRepository.save(config);
+        log.info("Mercado Livre tokens saved or updated for seller {}", saved.getSellerId());
+        return saved;
+    }
+
+    private MercadoLivreConfig getConfigOrThrow() {
+        return configRepository.findTopByOrderByIdDesc()
+                .orElseThrow(() -> new IllegalStateException("Mercado Livre não conectado para o seller " + SELLER_ID));
+    }
+
+    private TokenResponse requestToken(MultiValueMap<String, String> form) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        ResponseEntity<TokenResponse> response = restTemplate.postForEntity(
+                TOKEN_URL,
+                new HttpEntity<>(form, headers),
+                TokenResponse.class
+        );
+
+        TokenResponse body = response.getBody();
+        if (body == null || !StringUtils.hasText(body.accessToken())) {
+            throw new IllegalStateException("Falha ao obter tokens do Mercado Livre");
+        }
+        return body;
+    }
+
+    private void validateMlCredentials() {
+        if (!StringUtils.hasText(clientId) || !StringUtils.hasText(clientSecret) || !StringUtils.hasText(redirectUri)) {
+            throw new IllegalStateException("Credenciais do Mercado Livre não configuradas no ambiente");
+        }
+    }
+
+    private LinkedMultiValueMap<String, String> formData(String grantType) {
+        LinkedMultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        form.add("grant_type", grantType);
+        form.add("client_id", clientId);
+        form.add("client_secret", clientSecret);
+        return form;
+    }
+
+    private List<String> fetchActiveItemIds(String accessToken) {
+        log.info("Fetching active Mercado Livre item ids for seller {}", SELLER_ID);
+        Set<String> itemIds = new LinkedHashSet<>();
+        int offset = 0;
+
+        while (true) {
+            ItemSearchResponse response = fetchItemSearchPage(accessToken, SEARCH_PAGE_SIZE, offset);
+            if (response == null || response.results() == null || response.results().isEmpty()) {
+                break;
+            }
+
+            itemIds.addAll(response.results());
+
+            Paging paging = response.paging();
+            Integer limit = paging != null && paging.limit() != null ? paging.limit() : SEARCH_PAGE_SIZE;
+            Integer total = paging != null ? paging.total() : null;
+            offset += limit;
+
+            if (total != null && offset >= total) {
+                break;
+            }
+
+            if (response.results().size() < limit) {
+                break;
+            }
+        }
+
+        return new ArrayList<>(itemIds);
+    }
+
+    private ItemSearchResponse fetchItemSearchPage(String accessToken, int limit, int offset) {
+        String url = UriComponentsBuilder
+                .fromHttpUrl(ITEMS_SEARCH_URL.formatted(SELLER_ID))
+                .queryParam("status", "active")
+                .queryParam("limit", limit)
+                .queryParam("offset", offset)
+                .toUriString();
+
+        ResponseEntity<ItemSearchResponse> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                new HttpEntity<>(authHeaders(accessToken)),
+                ItemSearchResponse.class
+        );
+
+        return response.getBody();
+    }
+
+    private List<BatchItemResult> fetchBatchItems(List<String> batchIds, String accessToken) {
+        String url = UriComponentsBuilder
+                .fromHttpUrl(ITEM_BATCH_URL)
+                .queryParam("ids", String.join(",", batchIds))
+                .toUriString();
+
+        ResponseEntity<BatchItemResult[]> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                new HttpEntity<>(authHeaders(accessToken)),
+                BatchItemResult[].class
+        );
+
+        return Optional.ofNullable(response.getBody())
+                .map(Arrays::asList)
+                .orElse(List.of());
+    }
+
+    private String fetchDescription(String itemId, String accessToken) {
+        ResponseEntity<ItemDescription> response = restTemplate.exchange(
+                ITEM_DESCRIPTION_URL.formatted(itemId),
+                HttpMethod.GET,
+                new HttpEntity<>(authHeaders(accessToken)),
+                ItemDescription.class
+        );
+
+        return Optional.ofNullable(response.getBody())
+                .map(ItemDescription::plainText)
+                .orElse("");
+    }
+
+    private HttpHeaders authHeaders(@NonNull String accessToken) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(accessToken);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+        return headers;
+    }
+
+    private Book upsertBook(@NonNull String itemId, @NonNull ItemDetail item, @NonNull String description) {
+        Book book = bookRepository.findByMlId(itemId).orElseGet(Book::new);
+
+        String author = firstText(
+                extractAttribute(item.attributes(), "AUTHOR"),
+                extractAttribute(item.attributes(), "AUTHOR_NAME"),
+                extractAttribute(item.attributes(), "BRAND"),
+                book.getAuthor(),
+                "Mercado Livre"
+        );
+        String isbn = firstText(extractAttribute(item.attributes(), "ISBN"), book.getIsbn());
+        String category = firstText(book.getCategory(), item.categoryId(), "Mercado Livre");
+        BigDecimal price = item.price() != null ? item.price() : book.getPrice();
+        Double rating = item.health() != null ? Math.max(0.0, Math.min(5.0, item.health() * 5.0)) : book.getRating();
+
+        book.setTitle(firstText(item.title(), book.getTitle(), "Mercado Livre"));
+        book.setAuthor(author);
+        book.setDescription(firstText(description, book.getDescription()));
+        book.setCategory(category);
+        book.setPrice(price != null ? price : BigDecimal.ZERO);
+        book.setStock(item.availableQuantity() != null ? item.availableQuantity() : 0);
+        book.setSalesCount(item.soldQuantity() != null ? item.soldQuantity() : 0);
+        book.setImages(extractImages(item));
+        book.setActive(true);
+        book.setMlId(itemId);
+        book.setMlSynced(true);
+        book.setRating(rating);
+        book.setIsbn(isbn);
+
+        return bookRepository.save(book);
+    }
+
+    private List<String> extractImages(ItemDetail item) {
+        return Optional.ofNullable(item.pictures())
+                .orElse(List.of())
+                .stream()
+                .map(this::bestPictureUrl)
+                .filter(StringUtils::hasText)
+                .toList();
+    }
+
+    private String bestPictureUrl(Picture picture) {
+        return firstText(picture.secureUrl(), picture.url());
+    }
+
+    private String extractAttribute(List<Attribute> attributes, String name) {
+        return Optional.ofNullable(attributes)
+                .orElse(List.of())
+                .stream()
+                .filter(attribute -> name.equalsIgnoreCase(attribute.name()) || name.equalsIgnoreCase(attribute.id()))
+                .map(Attribute::valueName)
+                .filter(StringUtils::hasText)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private String firstText(String... values) {
+        for (String value : values) {
+            if (StringUtils.hasText(value)) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    private List<List<String>> partition(List<String> values, int size) {
+        if (values.isEmpty()) {
+            return List.of();
+        }
+
+        List<List<String>> partitions = new ArrayList<>();
+        for (int index = 0; index < values.size(); index += size) {
+            partitions.add(values.subList(index, Math.min(index + size, values.size())));
+        }
+        return partitions;
+    }
+}

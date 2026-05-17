@@ -121,10 +121,14 @@ public class BookService {
             if (existingBook.isPresent()) {
                 book = existingBook.get();
             book.setTitle(item.title());
+                book.setDescription(item.description());
+                book.setCategory(item.category());
             book.setPrice(item.price());
             book.setStock(item.available_quantity());
             book.setImages(images);
             book.setMlSynced(true);
+                book.setSalesCount(item.soldQuantity() != null ? item.soldQuantity() : book.getSalesCount());
+                book.setRating(item.health() != null ? item.health().doubleValue() : book.getRating());
             } else {
                 book = Book.builder()
                         .title(item.title())
@@ -133,11 +137,13 @@ public class BookService {
                         .category(item.category())
                         .price(item.price())
                         .stock(item.available_quantity())
+                        .salesCount(item.soldQuantity() != null ? item.soldQuantity() : 0)
                         .images(images)
                         .active(true)
                         .mlId(item.id())
                         .mlSynced(true)
                         .isbn(isbn)
+                        .rating(item.health() != null ? item.health().doubleValue() : null)
                         .build();
             }
 

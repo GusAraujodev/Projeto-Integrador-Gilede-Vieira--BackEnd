@@ -39,6 +39,10 @@ public class Book {
     @Column(nullable = false)
     private Integer stock;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer salesCount = 0;
+
     /**
      * Lista de URLs de imagens armazenadas como elementos separados em tabela
      * própria.

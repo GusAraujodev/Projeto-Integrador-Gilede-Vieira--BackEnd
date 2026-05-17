@@ -1,5 +1,6 @@
 package com.gilede.livraria.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
@@ -21,6 +22,7 @@ public class BookDTOs {
             Integer year,
             String mlId,
             Boolean mlSynced,
+            Integer salesCount,
             Double rating,
             String isbn,
             List<ReviewResponse> reviews) {
@@ -71,6 +73,8 @@ public class BookDTOs {
             BigDecimal price,
             Integer available_quantity,
             String description,
+            @JsonProperty("sold_quantity") Integer soldQuantity,
+            Integer health,
             List<MlPicture> pictures,
             List<MlAttribute> attributes) {
     }

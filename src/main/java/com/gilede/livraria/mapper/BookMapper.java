@@ -28,6 +28,7 @@ public class BookMapper {
                 book.getYear(),
                 book.getMlId(),
                 book.getMlSynced(),
+                book.getSalesCount(),
                 book.getRating(),
                 book.getIsbn(),
                 reviews);
