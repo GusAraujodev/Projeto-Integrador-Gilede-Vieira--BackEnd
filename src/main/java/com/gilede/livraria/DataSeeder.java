@@ -8,6 +8,7 @@ import com.gilede.livraria.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -19,35 +20,44 @@ import java.util.List;
 @Slf4j
 public class DataSeeder implements CommandLineRunner {
 
+        private static final String ADMIN_SEED_PASSWORD = "admin123";
+        private static final String CUSTOMER_SEED_PASSWORD = "cliente123";
+
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
     private final PasswordEncoder passwordEncoder;
 
+        @Value("${app.seed.enabled:true}")
+        private boolean seedEnabled;
+
     @Override
-    public void run(String... args) {
+        public void run(String... args) throws Exception {
+                if (!seedEnabled) {
+                        System.out.println("DataSeeder desativado no perfil local.");
+                        return;
+                }
+
         seedUsers();
         seedSampleBooks();
     }
 
     private void seedUsers() {
-        // Admin padrão exigido pelo frontend
-        if (!userRepository.existsByEmail("livrariagiledevieira@gmail.com")) {
-            User admin = User.builder()
-                    .name("Administrador Gilede Vieira")
-                    .email("livrariagiledevieira@gmail.com")
-                    .password(passwordEncoder.encode("admin123"))
-                    .role(Role.ADMIN)
-                    .build();
-            userRepository.save(admin);
-            log.info("Usuário admin criado: {}", admin.getEmail());
-        }
+        // Credenciais mock apenas para bootstrap local/teste; não representam dados de produção.
+        User admin = userRepository.findByEmail("livrariagiledevieira@gmail.com")
+                .orElse(User.builder().email("livrariagiledevieira@gmail.com").build());
+
+        admin.setName("Administrador Gilede Vieira");
+        admin.setPassword(passwordEncoder.encode(ADMIN_SEED_PASSWORD));
+        admin.setRole(Role.ADMIN);
+        userRepository.save(admin);
+        System.out.println("SENHA DO ADMIN RESETADA COM SUCESSO PARA: " + ADMIN_SEED_PASSWORD);
 
         // Cliente padrão exigido pelo frontend
         if (!userRepository.existsByEmail("giovani.vieira@email.com")) {
             User customer = User.builder()
                     .name("Giovani Vieira")
                     .email("giovani.vieira@email.com")
-                    .password(passwordEncoder.encode("cliente123"))
+                    .password(passwordEncoder.encode(CUSTOMER_SEED_PASSWORD))
                     .role(Role.CUSTOMER)
                     .build();
             userRepository.save(customer);

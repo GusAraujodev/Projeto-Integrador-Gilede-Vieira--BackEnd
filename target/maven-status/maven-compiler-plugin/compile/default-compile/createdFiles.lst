@@ -24,6 +24,7 @@ com\gilede\livraria\dto\BookDTOs$StockRequest.class
 com\gilede\livraria\dto\MercadoLivreDTOs$Paging.class
 com\gilede\livraria\dto\DashboardDTOs.class
 com\gilede\livraria\exception\GlobalExceptionHandler.class
+com\gilede\livraria\dto\AuthDTOs$RegisterRequest.class
 com\gilede\livraria\repository\OrderRepository.class
 com\gilede\livraria\model\Notification$NotificationBuilder.class
 com\gilede\livraria\dto\BookDTOs$BookRequest.class

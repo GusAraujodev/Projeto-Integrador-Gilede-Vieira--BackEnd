@@ -2,12 +2,14 @@ package com.gilede.livraria.service;
 
 import com.gilede.livraria.config.JwtService;
 import com.gilede.livraria.dto.AuthDTOs;
-import com.gilede.livraria.repository.UserRepository;
+import com.gilede.livraria.model.Role;
 import com.gilede.livraria.model.User;
+import com.gilede.livraria.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,6 +19,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final PasswordEncoder passwordEncoder;
 
     public AuthDTOs.LoginResponse login(AuthDTOs.LoginRequest request) {
         // Lança exceção automaticamente se credenciais forem inválidas
@@ -28,6 +31,21 @@ public class AuthService {
 
         String token = jwtService.generateToken(user);
 
+        return new AuthDTOs.LoginResponse(token, toUserResponse(user));
+    }
+
+    public AuthDTOs.LoginResponse register(AuthDTOs.RegisterRequest request) {
+        if (userRepository.existsByEmail(request.email())) {
+            throw new IllegalStateException("Email já cadastrado: " + request.email());
+        }
+        User user = User.builder()
+                .name(request.name())
+                .email(request.email())
+                .password(passwordEncoder.encode(request.password()))
+                .role(Role.CUSTOMER)
+                .build();
+        userRepository.save(user);
+        String token = jwtService.generateToken(user);
         return new AuthDTOs.LoginResponse(token, toUserResponse(user));
     }
 
