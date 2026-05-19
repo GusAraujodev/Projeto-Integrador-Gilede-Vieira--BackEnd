@@ -33,6 +33,7 @@ spring:
       write-dates-as-timestamps: false
 
 app:
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
   jwt:
     secret: ${JWT_SECRET:fallback-secret-only-for-local-dev-replace-in-prod}
     expiration-ms: 86400000

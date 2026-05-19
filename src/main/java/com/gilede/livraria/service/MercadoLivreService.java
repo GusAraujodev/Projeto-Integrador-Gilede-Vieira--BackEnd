@@ -153,11 +153,15 @@ public class MercadoLivreService {
         config.setSellerId(SELLER_ID);
         config.setAccessToken(tokenResponse.accessToken());
 
-        if (StringUtils.hasText(tokenResponse.refreshToken())) {
-            config.setRefreshToken(tokenResponse.refreshToken());
-        } else if (!StringUtils.hasText(config.getRefreshToken())) {
+        String refreshToken = StringUtils.hasText(tokenResponse.refreshToken())
+                ? tokenResponse.refreshToken()
+                : config.getRefreshToken();
+
+        if (!StringUtils.hasText(refreshToken)) {
             throw new IllegalStateException("Mercado Livre não retornou refresh_token válido.");
         }
+
+        config.setRefreshToken(refreshToken);
 
         long expiresIn = tokenResponse.expiresIn() != null ? tokenResponse.expiresIn() : 3600L;
         config.setExpiresAt(LocalDateTime.now().plusSeconds(expiresIn));

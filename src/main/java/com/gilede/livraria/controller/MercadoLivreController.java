@@ -6,11 +6,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.Map;
 
 @RestController
@@ -20,15 +22,18 @@ public class MercadoLivreController {
     private static final String AUTHORIZATION_BASE_URL = "https://auth.mercadolivre.com.br/authorization";
 
     private final MercadoLivreService mercadoLivreService;
+    private final String frontendUrl;
     private final String clientId;
     private final String clientSecret;
     private final String redirectUri;
 
     public MercadoLivreController(MercadoLivreService mercadoLivreService,
+                                  @Value("${app.frontend-url}") String frontendUrl,
                                   @Value("${ml.client-id}") String clientId,
                                   @Value("${ml.client-secret}") String clientSecret,
                                   @Value("${ml.redirect-uri}") String redirectUri) {
         this.mercadoLivreService = mercadoLivreService;
+        this.frontendUrl = frontendUrl;
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.redirectUri = redirectUri;
@@ -52,16 +57,20 @@ public class MercadoLivreController {
     }
 
     @GetMapping("/callback")
-    public ResponseEntity<Map<String, Object>> callback(@RequestParam String code) {
-        MercadoLivreConfig config = mercadoLivreService.exchangeCodeForTokens(code);
-        return ResponseEntity.ok(Map.of(
-                "status", "connected",
-                "sellerId", config.getSellerId(),
-                "expiresAt", config.getExpiresAt()
-        ));
+    public ResponseEntity<Void> callback(@RequestParam String code) {
+        try {
+            mercadoLivreService.exchangeCodeForTokens(code);
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .location(URI.create(frontendUrl + "/admin/ml-sync?ml=connected"))
+                    .build();
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .location(URI.create(frontendUrl + "/admin/ml-sync?ml=error"))
+                    .build();
+        }
     }
 
-    @GetMapping("/sync")
+    @PostMapping("/sync")
     public ResponseEntity<Map<String, Object>> sync() {
         long startedAt = System.currentTimeMillis();
         int synced = mercadoLivreService.syncCatalog();

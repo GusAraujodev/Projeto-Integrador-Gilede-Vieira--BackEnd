@@ -59,7 +59,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/ml/callback").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/ml/auth-url").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/ml/status").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/ml/sync").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/ml/sync").hasRole("ADMIN")
 
                         // Catálogo público de livros
                         .requestMatchers(HttpMethod.GET, "/books").permitAll()
