@@ -31,6 +31,8 @@ public class BookMapper {
                 book.getSalesCount(),
                 book.getRating(),
                 book.getIsbn(),
+                book.getPublisher(),
+                book.getPages(),
                 reviews);
     }
 

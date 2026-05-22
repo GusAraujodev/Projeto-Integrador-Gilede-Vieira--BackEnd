@@ -43,7 +43,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class MercadoLivreService {
 
-    private static final String SELLER_ID = "1635399587";
+    private static final String SELLER_ID = "532947791";
     private static final int SEARCH_PAGE_SIZE = 50;
     private static final int BATCH_SIZE = 20;
     private static final long RATE_LIMIT_DELAY_MS = 50L;
@@ -148,20 +148,50 @@ public class MercadoLivreService {
         return processedBooks;
     }
 
-    private MercadoLivreConfig saveTokens(@NonNull TokenResponse tokenResponse) {
-        MercadoLivreConfig config = configRepository.findTopByOrderByIdDesc().orElseGet(MercadoLivreConfig::new);
-        config.setSellerId(SELLER_ID);
-        config.setAccessToken(tokenResponse.accessToken());
-
-        String refreshToken = StringUtils.hasText(tokenResponse.refreshToken())
-                ? tokenResponse.refreshToken()
-                : config.getRefreshToken();
-
-        if (!StringUtils.hasText(refreshToken)) {
-            throw new IllegalStateException("Mercado Livre não retornou refresh_token válido.");
+    public ItemDetail fetchItemDetail(String itemId) {
+        if (!StringUtils.hasText(itemId)) {
+            throw new IllegalStateException("Item ID do Mercado Livre inválido.");
         }
 
-        config.setRefreshToken(refreshToken);
+        String accessToken = getValidAccessToken();
+        ResponseEntity<ItemDetail> response = restTemplate.exchange(
+                ITEM_BATCH_URL + "/" + itemId,
+                HttpMethod.GET,
+                new HttpEntity<>(authHeaders(accessToken)),
+                ItemDetail.class
+        );
+
+        ItemDetail item = response.getBody();
+        if (item == null || !StringUtils.hasText(item.id())) {
+            throw new IllegalStateException("Item do Mercado Livre não encontrado para o id " + itemId);
+        }
+
+        return item;
+    }
+
+    private MercadoLivreConfig saveTokens(@NonNull TokenResponse tokenResponse) {
+        MercadoLivreConfig config = configRepository.findTopByOrderByIdDesc().orElseGet(MercadoLivreConfig::new);
+
+        // Usar o userId real retornado pelo ML; só cai no SELLER_ID hardcoded como fallback
+        if (tokenResponse.userId() != null && tokenResponse.userId() > 0) {
+            config.setSellerId(tokenResponse.userId().toString());
+        } else if (!StringUtils.hasText(config.getSellerId())) {
+            config.setSellerId(SELLER_ID);
+        }
+
+        config.setAccessToken(tokenResponse.accessToken());
+
+        // No fluxo de refresh o ML NÃO retorna novo refresh_token — isso é normal.
+        // Só sobrescreve se vier um refresh_token novo na resposta.
+        if (StringUtils.hasText(tokenResponse.refreshToken())) {
+            config.setRefreshToken(tokenResponse.refreshToken());
+        }
+
+        // Só falha se for primeira autenticação e não tiver refresh_token em lugar nenhum
+        if (!StringUtils.hasText(config.getRefreshToken())) {
+            throw new IllegalStateException(
+                    "Primeira autorização não retornou refresh_token. Verifique se o fluxo OAuth está usando authorization_code.");
+        }
 
         long expiresIn = tokenResponse.expiresIn() != null ? tokenResponse.expiresIn() : 3600L;
         config.setExpiresAt(LocalDateTime.now().plusSeconds(expiresIn));
@@ -239,7 +269,7 @@ public class MercadoLivreService {
 
     private ItemSearchResponse fetchItemSearchPage(String accessToken, int limit, int offset) {
         String url = UriComponentsBuilder
-                .fromHttpUrl(ITEMS_SEARCH_URL.formatted(SELLER_ID))
+                .fromHttpUrl(ITEMS_SEARCH_URL.formatted(getConfigOrThrow().getSellerId()))
                 .queryParam("status", "active")
                 .queryParam("limit", limit)
                 .queryParam("offset", offset)
@@ -304,6 +334,14 @@ public class MercadoLivreService {
                 "Mercado Livre"
         );
         String isbn = firstText(extractAttribute(item.attributes(), "ISBN"), book.getIsbn());
+        String publisher = firstText(
+            extractAttribute(item.attributes(), "PUBLISHER", "BOOK_PUBLISHER", "PUBLICATION_NAME"),
+            book.getPublisher()
+        );
+        Integer pages = firstInteger(
+            extractIntegerAttribute(item.attributes(), "PAGES", "BOOK_PAGES", "PAGE_COUNT"),
+            book.getPages()
+        );
         String category = firstText(book.getCategory(), item.categoryId(), "Mercado Livre");
         BigDecimal price = item.price() != null ? item.price() : book.getPrice();
         Double rating = item.health() != null ? Math.max(0.0, Math.min(5.0, item.health() * 5.0)) : book.getRating();
@@ -321,6 +359,8 @@ public class MercadoLivreService {
         book.setMlSynced(true);
         book.setRating(rating);
         book.setIsbn(isbn);
+        book.setPublisher(publisher);
+        book.setPages(pages);
 
         return bookRepository.save(book);
     }
@@ -338,15 +378,56 @@ public class MercadoLivreService {
         return firstText(picture.secureUrl(), picture.url());
     }
 
-    private String extractAttribute(List<Attribute> attributes, String name) {
+    private String extractAttribute(List<Attribute> attributes, String... names) {
         return Optional.ofNullable(attributes)
                 .orElse(List.of())
                 .stream()
-                .filter(attribute -> name.equalsIgnoreCase(attribute.name()) || name.equalsIgnoreCase(attribute.id()))
+                .filter(attribute -> matchesAny(attribute, names))
                 .map(Attribute::valueName)
                 .filter(StringUtils::hasText)
                 .findFirst()
                 .orElse(null);
+    }
+
+    private Integer extractIntegerAttribute(List<Attribute> attributes, String... names) {
+        String value = extractAttribute(attributes, names);
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+
+        String digitsOnly = value.replaceAll("[^0-9]", "");
+        if (!StringUtils.hasText(digitsOnly)) {
+            return null;
+        }
+
+        try {
+            return Integer.valueOf(digitsOnly);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private Integer firstInteger(Integer... values) {
+        for (Integer value : values) {
+            if (value != null) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    private boolean matchesAny(Attribute attribute, String... names) {
+        if (attribute == null || names == null) {
+            return false;
+        }
+
+        for (String name : names) {
+            if (name != null && (name.equalsIgnoreCase(attribute.name()) || name.equalsIgnoreCase(attribute.id()))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private String firstText(String... values) {

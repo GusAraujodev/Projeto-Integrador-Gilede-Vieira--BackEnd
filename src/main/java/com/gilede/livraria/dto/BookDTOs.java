@@ -25,6 +25,8 @@ public class BookDTOs {
             Integer salesCount,
             Double rating,
             String isbn,
+            String publisher,
+            Integer pages,
             List<ReviewResponse> reviews) {
     }
 

@@ -59,6 +59,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/ml/callback").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/ml/auth-url").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/ml/status").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/ml/test-mock-payload").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/ml/webhook").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/ml/sync").hasRole("ADMIN")
 
                         // Catálogo público de livros

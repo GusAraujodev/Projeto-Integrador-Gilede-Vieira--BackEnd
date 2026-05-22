@@ -7,8 +7,7 @@ import com.gilede.livraria.model.User;
 import com.gilede.livraria.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,16 +17,15 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
 
     public AuthDTOs.LoginResponse login(AuthDTOs.LoginRequest request) {
-        // Lança exceção automaticamente se credenciais forem inválidas
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.email(), request.password()));
-
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado"));
+            .orElseThrow(() -> new BadCredentialsException("Email ou senha incorretos"));
+
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new BadCredentialsException("Email ou senha incorretos");
+        }
 
         String token = jwtService.generateToken(user);
 

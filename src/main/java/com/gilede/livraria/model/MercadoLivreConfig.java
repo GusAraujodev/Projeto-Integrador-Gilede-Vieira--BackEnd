@@ -38,7 +38,7 @@ public class MercadoLivreConfig {
 
     @Column(length = 50, nullable = false)
     @Builder.Default
-    private String sellerId = "1635399587";
+    private String sellerId = "532947791";
 
     public boolean isExpired() {
         return expiresAt == null || LocalDateTime.now().isAfter(expiresAt.minusMinutes(5));

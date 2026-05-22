@@ -70,6 +70,10 @@ public class Book {
 
     private String isbn;
 
+    private String publisher;
+
+    private Integer pages;
+
     /**
      * Reviews são entidades separadas mapeadas aqui para facilitar o carregamento
      * no endpoint GET /books/:id (o frontend espera reviews dentro do book).

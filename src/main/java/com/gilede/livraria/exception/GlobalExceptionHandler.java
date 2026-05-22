@@ -36,7 +36,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
+    public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex)
+     {
         return build(HttpStatus.UNAUTHORIZED, "Email ou senha incorretos");
     }
 
@@ -60,10 +61,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(body);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGeneral(Exception ex) {
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno do servidor");
-    }
+   @ExceptionHandler(Exception.class)
+public ResponseEntity<ErrorResponse> handleGeneral(Exception ex) {
+    ex.printStackTrace();
+
+    return build(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        ex.getClass().getSimpleName() + ": " + ex.getMessage()
+    );
+}
 
     private ResponseEntity<ErrorResponse> build(HttpStatus status, String message) {
         return ResponseEntity.status(status).body(new ErrorResponse(
