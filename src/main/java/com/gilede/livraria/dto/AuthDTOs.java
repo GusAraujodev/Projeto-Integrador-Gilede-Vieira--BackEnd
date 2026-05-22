@@ -14,7 +14,8 @@ public class AuthDTOs {
     public record RegisterRequest(
             @NotBlank String name,
             @NotBlank @Email String email,
-            @NotBlank @Size(min = 6, message = "Senha deve ter no mínimo 6 caracteres") String password) {
+            @NotBlank @Size(min = 8, message = "Senha deve ter no mínimo 8 caracteres") String password,
+            @NotBlank String confirmPassword) {
     }
 
     public record LoginResponse(

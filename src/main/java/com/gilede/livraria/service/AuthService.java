@@ -33,6 +33,14 @@ public class AuthService {
     }
 
     public AuthDTOs.LoginResponse register(AuthDTOs.RegisterRequest request) {
+        if (request.password() == null || !request.password().equals(request.confirmPassword())) {
+            throw new IllegalStateException("As senhas informadas não coincidem");
+        }
+
+        if (request.password() == null || request.password().length() < 8) {
+            throw new IllegalStateException("Senha deve ter no mínimo 8 caracteres");
+        }
+
         if (userRepository.existsByEmail(request.email())) {
             throw new IllegalStateException("Email já cadastrado: " + request.email());
         }

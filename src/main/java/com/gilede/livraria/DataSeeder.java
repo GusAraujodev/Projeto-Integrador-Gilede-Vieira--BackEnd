@@ -43,14 +43,18 @@ public class DataSeeder implements CommandLineRunner {
 
     private void seedUsers() {
         // Credenciais mock apenas para bootstrap local/teste; não representam dados de produção.
-        User admin = userRepository.findByEmail("livrariagiledevieira@gmail.com")
-                .orElse(User.builder().email("livrariagiledevieira@gmail.com").build());
-
-        admin.setName("Administrador Gilede Vieira");
-        admin.setPassword(passwordEncoder.encode(ADMIN_SEED_PASSWORD));
-        admin.setRole(Role.ADMIN);
-        userRepository.save(admin);
-        System.out.println("SENHA DO ADMIN RESETADA COM SUCESSO PARA: " + ADMIN_SEED_PASSWORD);
+                if (userRepository.existsByEmail("livrariagiledevieira@gmail.com")) {
+                        log.info("Admin já existe, senha preservada.");
+                } else {
+                        User admin = User.builder()
+                                        .name("Administrador Gilede Vieira")
+                                        .email("livrariagiledevieira@gmail.com")
+                                        .password(passwordEncoder.encode(ADMIN_SEED_PASSWORD))
+                                        .role(Role.ADMIN)
+                                        .build();
+                        userRepository.save(admin);
+                        System.out.println("SENHA DO ADMIN RESETADA COM SUCESSO PARA: " + ADMIN_SEED_PASSWORD);
+                }
 
         // Cliente padrão exigido pelo frontend
         if (!userRepository.existsByEmail("giovani.vieira@email.com")) {
