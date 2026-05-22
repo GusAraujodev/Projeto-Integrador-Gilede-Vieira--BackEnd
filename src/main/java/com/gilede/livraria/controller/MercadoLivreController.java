@@ -2,6 +2,7 @@ package com.gilede.livraria.controller;
 
 import com.gilede.livraria.model.MercadoLivreConfig;
 import com.gilede.livraria.service.MercadoLivreService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ml")
+@Slf4j
 public class MercadoLivreController {
 
     private static final String AUTHORIZATION_BASE_URL = "https://auth.mercadolivre.com.br/authorization";
@@ -64,8 +66,13 @@ public class MercadoLivreController {
                     .location(URI.create(frontendUrl + "/admin/ml-sync?ml=connected"))
                     .build();
         } catch (Exception ex) {
+            log.error("Erro no callback OAuth do Mercado Livre: {}", ex.getMessage(), ex);
+            String errorMsg = java.net.URLEncoder.encode(
+                ex.getMessage() != null ? ex.getMessage() : "erro_desconhecido",
+                java.nio.charset.StandardCharsets.UTF_8
+            );
             return ResponseEntity.status(HttpStatus.FOUND)
-                    .location(URI.create(frontendUrl + "/admin/ml-sync?ml=error"))
+                .location(URI.create(frontendUrl + "/admin/ml-sync?ml=error&reason=" + errorMsg))
                     .build();
         }
     }
