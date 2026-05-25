@@ -1,6 +1,7 @@
 package com.gilede.livraria.controller;
 
 import com.gilede.livraria.dto.NotificationDTOs;
+import com.gilede.livraria.repository.UserRepository;
 import com.gilede.livraria.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,17 +18,32 @@ import java.util.UUID;
 public class NotificationController {
 
     private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
     /** GET /notifications/user/{userId} */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<NotificationDTOs.NotificationResponse>> findByUser(
-            @PathVariable UUID userId,
-            Authentication authentication) {
-        // Garante que o usuário só acessa suas próprias notificações
+    public ResponseEntity<?> findByUser(
+        @PathVariable UUID userId,
+        Authentication authentication) {
+
         String emailLogado = authentication.getName();
-        // A validação por email é suficiente — o service já filtra por userId
-        return ResponseEntity.ok(notificationService.findByUserId(userId));
+
+    // Verifica se o ID passado na URL pertence ao e-mail contido no token
+    boolean pertenceAoUsuario = userRepository.findByEmail(emailLogado)
+        .map(u -> u.getId().equals(userId))
+        .orElse(false);
+
+    // Permite o acesso irrestrito se for administrador
+    boolean isAdmin = authentication.getAuthorities().stream()
+        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+    if (!pertenceAoUsuario && !isAdmin) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+            .body("Acesso negado: você não possui permissão para ler estas notificações.");
+    }
+
+    return ResponseEntity.ok(notificationService.findByUserId(userId));
     }
 
     /** PATCH /notifications/{id}/read */
