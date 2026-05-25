@@ -30,10 +30,10 @@ public class MercadoLivreController {
     private final String redirectUri;
 
     public MercadoLivreController(MercadoLivreService mercadoLivreService,
-                                  @Value("${app.frontend-url}") String frontendUrl,
-                                  @Value("${ml.client-id}") String clientId,
-                                  @Value("${ml.client-secret}") String clientSecret,
-                                  @Value("${ml.redirect-uri}") String redirectUri) {
+            @Value("${app.frontend-url}") String frontendUrl,
+            @Value("${ml.client-id}") String clientId,
+            @Value("${ml.client-secret}") String clientSecret,
+            @Value("${ml.redirect-uri}") String redirectUri) {
         this.mercadoLivreService = mercadoLivreService;
         this.frontendUrl = frontendUrl;
         this.clientId = clientId;
@@ -54,8 +54,7 @@ public class MercadoLivreController {
                 "authorizationUrl", authorizationUrl,
                 "instruction", "Abra a URL, autorize o aplicativo e envie o code para /api/ml/callback",
                 "redirectUri", redirectUri,
-                "clientSecretConfigured", String.valueOf(clientSecret != null && !clientSecret.isBlank())
-        ));
+                "clientSecretConfigured", String.valueOf(clientSecret != null && !clientSecret.isBlank())));
     }
 
     @GetMapping("/callback")
@@ -68,11 +67,10 @@ public class MercadoLivreController {
         } catch (Exception ex) {
             log.error("Erro no callback OAuth do Mercado Livre: {}", ex.getMessage(), ex);
             String errorMsg = java.net.URLEncoder.encode(
-                ex.getMessage() != null ? ex.getMessage() : "erro_desconhecido",
-                java.nio.charset.StandardCharsets.UTF_8
-            );
+                    ex.getMessage() != null ? ex.getMessage() : "erro_desconhecido",
+                    java.nio.charset.StandardCharsets.UTF_8);
             return ResponseEntity.status(HttpStatus.FOUND)
-                .location(URI.create(frontendUrl + "/admin/ml-sync?ml=error&reason=" + errorMsg))
+                    .location(URI.create(frontendUrl + "/admin/ml-sync?ml=error&reason=" + errorMsg))
                     .build();
         }
     }
@@ -85,8 +83,7 @@ public class MercadoLivreController {
         return ResponseEntity.ok(Map.of(
                 "status", "ok",
                 "books", synced,
-                "durationMs", durationMs
-        ));
+                "durationMs", durationMs));
     }
 
     @GetMapping("/status")
@@ -96,13 +93,12 @@ public class MercadoLivreController {
             return ResponseEntity.ok(Map.of(
                     "authorized", true,
                     "accessTokenActive", true,
-                    "tokenSuffix", accessToken.length() > 6 ? accessToken.substring(accessToken.length() - 6) : accessToken
-            ));
+                    "tokenSuffix",
+                    accessToken.length() > 6 ? accessToken.substring(accessToken.length() - 6) : accessToken));
         } catch (IllegalStateException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                     "authorized", false,
-                    "message", "Conta do Mercado Livre ainda não autorizada ou token expirado: " + ex.getMessage()
-            ));
+                    "message", "Conta do Mercado Livre ainda não autorizada ou token expirado: " + ex.getMessage()));
         }
     }
 }

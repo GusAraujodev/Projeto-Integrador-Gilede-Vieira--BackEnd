@@ -7,6 +7,9 @@ import com.gilede.livraria.model.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +26,7 @@ import java.util.UUID;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final UserRepository userRepository;
     private final BookRepository bookRepository;
     private final NotificationRepository notificationRepository;
     private final OrderMapper orderMapper;
@@ -94,9 +98,10 @@ public class OrderService {
         BigDecimal total = subtotal.subtract(discount).max(BigDecimal.ZERO);
 
         PaymentMethod paymentMethod = PaymentMethod.valueOf(request.paymentMethod().toUpperCase());
+        UUID resolvedUserId = resolveUserId(request);
 
         Order order = Order.builder()
-                .userId(request.userId() != null ? UUID.fromString(request.userId()) : null)
+            .userId(resolvedUserId)
                 .customerName(request.customerName())
                 .customerEmail(request.customerEmail())
                 .customerPhone(request.customerPhone())
@@ -133,6 +138,26 @@ public class OrderService {
 
         log.info("Pedido criado: {} para {}", saved.getId(), saved.getCustomerEmail());
         return orderMapper.toResponse(saved);
+    }
+
+    private UUID resolveUserId(OrderDTOs.CreateOrderRequest request) {
+        if (request.userId() != null && !request.userId().isBlank()) {
+            return UUID.fromString(request.userId());
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AccessDeniedException("Usuário autenticado é obrigatório para criar pedido");
+        }
+
+        String email = authentication.getName();
+        if (email == null || email.isBlank() || "anonymousUser".equalsIgnoreCase(email)) {
+            throw new AccessDeniedException("Usuário autenticado é obrigatório para criar pedido");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AccessDeniedException("Usuário autenticado não encontrado"));
+        return user.getId();
     }
 
     /**
