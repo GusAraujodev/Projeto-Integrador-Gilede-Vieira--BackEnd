@@ -29,6 +29,30 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(name = "phone")
+    private String phone;
+
+    @Column(name = "zip_code")
+    private String zipCode;
+
+    @Column(name = "street")
+    private String street;
+
+    @Column(name = "number")
+    private String number;
+
+    @Column(name = "complement")
+    private String complement;
+
+    @Column(name = "neighborhood")
+    private String neighborhood;
+
+    @Column(name = "city")
+    private String city;
+
+    @Column(name = "state")
+    private String state;
+
     @Column(nullable = false)
     private String password;
 

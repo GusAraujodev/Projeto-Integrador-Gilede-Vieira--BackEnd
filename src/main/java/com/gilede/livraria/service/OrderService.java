@@ -50,6 +50,12 @@ public class OrderService {
                 .stream().map(orderMapper::toResponse).toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<OrderDTOs.OrderResponse> findByAuthenticatedUser(Authentication authentication) {
+        UUID userId = resolveAuthenticatedUserId(authentication);
+        return findByUserId(userId);
+    }
+
     /**
      * Cria um pedido:
      * 1. Valida estoque de cada item
@@ -58,7 +64,7 @@ public class OrderService {
      * 4. Persiste o pedido
      */
     @Transactional
-    public OrderDTOs.OrderResponse create(OrderDTOs.CreateOrderRequest request) {
+    public OrderDTOs.OrderResponse create(Authentication authentication, OrderDTOs.CreateOrderRequest request) {
         Objects.requireNonNull(request, "Requisição de pedido é obrigatória");
         Objects.requireNonNull(request.items(), "Itens do pedido são obrigatórios");
         Objects.requireNonNull(request.address(), "Endereço do pedido é obrigatório");
@@ -98,7 +104,7 @@ public class OrderService {
         BigDecimal total = subtotal.subtract(discount).max(BigDecimal.ZERO);
 
         PaymentMethod paymentMethod = PaymentMethod.valueOf(request.paymentMethod().toUpperCase());
-        UUID resolvedUserId = resolveUserId(request);
+        UUID resolvedUserId = resolveAuthenticatedUserId(authentication);
 
         Order order = Order.builder()
             .userId(resolvedUserId)
@@ -140,12 +146,7 @@ public class OrderService {
         return orderMapper.toResponse(saved);
     }
 
-    private UUID resolveUserId(OrderDTOs.CreateOrderRequest request) {
-        if (request.userId() != null && !request.userId().isBlank()) {
-            return UUID.fromString(request.userId());
-        }
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    private UUID resolveAuthenticatedUserId(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AccessDeniedException("Usuário autenticado é obrigatório para criar pedido");
         }

@@ -27,7 +27,27 @@ public class AuthDTOs {
             String id,
             String name,
             String email,
+            String phone,
+            String zipCode,
+            String street,
+            String number,
+            String complement,
+            String neighborhood,
+            String city,
+            String state,
             String role // "admin" | "customer" — exato do frontend
+    ) {
+    }
+
+    public record UpdateContactRequest(
+            @NotBlank(message = "Nome é obrigatório") @Size(min = 2, max = 150) String name,
+            @Size(max = 20) String phone
+    ) {
+    }
+
+    public record UpdateAddressRequest(
+            String zipCode, String street, String number, String complement, String neighborhood, String city,
+            @Size(max = 2) String state
     ) {
     }
 }

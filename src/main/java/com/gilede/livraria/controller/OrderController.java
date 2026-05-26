@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,15 +35,18 @@ public class OrderController {
 
     /** GET /orders/user/{userId} — Histórico do cliente */
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<OrderDTOs.OrderResponse>> findByUser(@PathVariable UUID userId) {
-        return ResponseEntity.ok(orderService.findByUserId(userId));
+    public ResponseEntity<List<OrderDTOs.OrderResponse>> findByUser(
+            Authentication authentication,
+            @PathVariable UUID userId) {
+        return ResponseEntity.ok(orderService.findByAuthenticatedUser(authentication));
     }
 
     /** POST /orders — Criar pedido (autenticado ou guest) */
     @PostMapping
     public ResponseEntity<OrderDTOs.OrderResponse> create(
+            Authentication authentication,
             @Valid @RequestBody OrderDTOs.CreateOrderRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(orderService.create(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(orderService.create(authentication, request));
     }
 
     /** PATCH /orders/{id}/status — Admin: alterar status e gerar notificação */

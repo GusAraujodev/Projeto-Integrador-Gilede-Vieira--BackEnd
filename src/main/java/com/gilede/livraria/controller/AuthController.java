@@ -49,4 +49,24 @@ public class AuthController {
     public ResponseEntity<AuthDTOs.UserResponse> me(Authentication authentication) {
         return ResponseEntity.ok(authService.me(authentication.getName()));
     }
+
+    @GetMapping("/profile")
+    public ResponseEntity<AuthDTOs.UserResponse> getProfile(Authentication authentication) {
+        AuthDTOs.UserResponse response = authService.getProfileByEmail(authentication.getName());
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/profile/contact")
+    public ResponseEntity<AuthDTOs.UserResponse> updateContact(
+            @jakarta.validation.Valid @RequestBody AuthDTOs.UpdateContactRequest request,
+            Authentication authentication) {
+        return ResponseEntity.ok(authService.updateContact(authentication.getName(), request));
+    }
+
+    @PutMapping("/profile/address")
+    public ResponseEntity<AuthDTOs.UserResponse> updateAddress(
+            @jakarta.validation.Valid @RequestBody AuthDTOs.UpdateAddressRequest request,
+            Authentication authentication) {
+        return ResponseEntity.ok(authService.updateAddress(authentication.getName(), request));
+    }
 }

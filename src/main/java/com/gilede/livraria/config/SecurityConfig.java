@@ -89,6 +89,9 @@ public class SecurityConfig {
 
                         // Me (quem sou eu) — autenticado
                         .requestMatchers(HttpMethod.GET, "/auth/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/auth/profile").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/auth/profile/contact").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/auth/profile/address").authenticated()
 
                         // Qualquer outra rota requer autenticação
                         .anyRequest().authenticated())

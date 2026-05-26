@@ -10,7 +10,6 @@ public class FavoriteDTOs {
     }
 
     public record AddFavoriteRequest(
-            @NotBlank String userId,
             @NotBlank String bookId) {
     }
 }

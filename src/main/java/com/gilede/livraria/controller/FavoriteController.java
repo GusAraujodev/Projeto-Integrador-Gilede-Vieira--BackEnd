@@ -6,6 +6,7 @@ import com.gilede.livraria.service.FavoritesService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,27 +19,28 @@ public class FavoriteController {
 
     private final FavoritesService favoriteService;
 
-    /** GET /favorites/user/{userId} */
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<BookDTOs.BookResponse>> findByUser(@PathVariable UUID userId) {
-        return ResponseEntity.ok(favoriteService.findByUserId(userId));
+    /** GET /favorites/user */
+    @GetMapping("/user")
+    public ResponseEntity<List<BookDTOs.BookResponse>> findByUser(Authentication authentication) {
+        return ResponseEntity.ok(favoriteService.findByAuthenticatedUser(authentication));
     }
 
     /** POST /favorites */
     @PostMapping
     public ResponseEntity<BookDTOs.BookResponse> add(
+            Authentication authentication,
             @Valid @RequestBody FavoriteDTOs.AddFavoriteRequest request) {
         return ResponseEntity.ok(favoriteService.add(
-                UUID.fromString(request.userId()),
+                authentication,
                 UUID.fromString(request.bookId())));
     }
 
     /** DELETE /favorites/{userId}/{bookId} */
     @DeleteMapping("/{userId}/{bookId}")
     public ResponseEntity<Void> remove(
-            @PathVariable UUID userId,
+            Authentication authentication,
             @PathVariable UUID bookId) {
-        favoriteService.remove(userId, bookId);
+        favoriteService.remove(authentication, bookId);
         return ResponseEntity.noContent().build();
     }
 }

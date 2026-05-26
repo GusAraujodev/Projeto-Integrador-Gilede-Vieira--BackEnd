@@ -61,6 +61,12 @@ public class AuthService {
         return toUserResponse(user);
     }
 
+    public AuthDTOs.UserResponse getProfileByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado: " + email));
+        return toUserResponse(user);
+    }
+
     private AuthDTOs.UserResponse toUserResponse(User user) {
         // role em lowercase para compatibilidade com o frontend: "admin" | "customer"
         String roleForFrontend = user.getRole().name().toLowerCase();
@@ -68,6 +74,42 @@ public class AuthService {
                 user.getId().toString(),
                 user.getName(),
                 user.getEmail(),
+            user.getPhone(),
+            user.getZipCode(),
+            user.getStreet(),
+            user.getNumber(),
+            user.getComplement(),
+            user.getNeighborhood(),
+            user.getCity(),
+            user.getState(),
                 roleForFrontend);
+    }
+
+    public AuthDTOs.UserResponse updateContact(String email, AuthDTOs.UpdateContactRequest request) {
+        User user = userRepository.findByEmail(email).orElseThrow(
+                () -> new jakarta.persistence.EntityNotFoundException("Usuário não encontrado: " + email));
+
+        user.setName(request.name().trim());
+
+        if (request.phone() != null) {
+            user.setPhone(request.phone().trim().isEmpty() ? null : request.phone().trim());
+        }
+
+        return toUserResponse(userRepository.save(user));
+    }
+
+    public AuthDTOs.UserResponse updateAddress(String email, AuthDTOs.UpdateAddressRequest request) {
+        User user = userRepository.findByEmail(email).orElseThrow(
+                () -> new jakarta.persistence.EntityNotFoundException("Usuário não encontrado: " + email));
+
+        user.setZipCode(request.zipCode());
+        user.setStreet(request.street());
+        user.setNumber(request.number());
+        user.setComplement(request.complement());
+        user.setNeighborhood(request.neighborhood());
+        user.setCity(request.city());
+        user.setState(request.state());
+
+        return toUserResponse(userRepository.save(user));
     }
 }

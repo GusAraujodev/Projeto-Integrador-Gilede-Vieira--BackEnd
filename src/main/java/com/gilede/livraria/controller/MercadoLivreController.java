@@ -47,6 +47,7 @@ public class MercadoLivreController {
                 .queryParam("response_type", "code")
                 .queryParam("client_id", clientId)
                 .queryParam("redirect_uri", redirectUri)
+            .queryParam("access_type", "offline")
                 .build(true)
                 .toUriString();
 

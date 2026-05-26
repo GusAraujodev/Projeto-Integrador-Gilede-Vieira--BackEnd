@@ -49,15 +49,19 @@ public class NotificationController {
     /** PATCH /notifications/{id}/read */
     @PreAuthorize("isAuthenticated()")
     @PatchMapping("/{id}/read")
-    public ResponseEntity<NotificationDTOs.NotificationResponse> markAsRead(@PathVariable UUID id) {
-        return ResponseEntity.ok(notificationService.markAsRead(id));
+    public ResponseEntity<NotificationDTOs.NotificationResponse> markAsRead(
+            Authentication authentication,
+            @PathVariable UUID id) {
+        return ResponseEntity.ok(notificationService.markAsRead(authentication, id));
     }
 
     /** PATCH /notifications/read-all/{userId} */
     @PreAuthorize("isAuthenticated()")
     @PatchMapping("/read-all/{userId}")
-    public ResponseEntity<Void> markAllAsRead(@PathVariable UUID userId) {
-        notificationService.markAllAsRead(userId);
+    public ResponseEntity<Void> markAllAsRead(
+            Authentication authentication,
+            @PathVariable UUID userId) {
+        notificationService.markAllAsRead(authentication, userId);
         return ResponseEntity.noContent().build();
     }
 }
