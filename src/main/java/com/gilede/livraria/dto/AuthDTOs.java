@@ -41,7 +41,8 @@ public class AuthDTOs {
 
     public record UpdateContactRequest(
             @NotBlank(message = "Nome é obrigatório") @Size(min = 2, max = 150) String name,
-            @Size(max = 20) String phone
+            @Size(max = 20) String phone,
+            @Email String notificationEmail
     ) {
     }
 

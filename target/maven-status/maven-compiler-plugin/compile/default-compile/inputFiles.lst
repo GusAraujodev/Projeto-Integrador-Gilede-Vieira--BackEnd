@@ -1,5 +1,6 @@
 C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\repository\MercadoLivreConfigRepository.java
 C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\service\MercadoLivreService.java
+C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\model\UserProfile.java
 C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\model\Role.java
 C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\DataSeeder.java
 C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\config\JwtService.java
@@ -37,14 +38,17 @@ C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\ja
 C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\exception\GlobalExceptionHandler.java
 C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\service\NotificationService.java
 C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\scheduler\MercadoLivreScheduler.java
+C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\model\Address.java
 C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\dto\FavoriteDTOs.java
 C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\repository\NotificationRepository.java
 C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\config\JwtAuthenticationFilter.java
 C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\repository\BookRepository.java
+C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\repository\AddressRepository.java
 C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\model\Order.java
 C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\model\MercadoLivreConfig.java
 C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\repository\OrderRepository.java
 C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\controller\MercadoLivreController.java
+C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\repository\UserProfileRepository.java
 C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\controller\BookController.java
 C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\model\Favorite.java
 C:\Users\NITRO5\Downloads\Projeto Integrador Backend - Gilede Vieira\src\main\java\com\gilede\livraria\model\OrderStatus.java

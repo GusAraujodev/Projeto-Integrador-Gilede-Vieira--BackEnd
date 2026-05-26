@@ -42,6 +42,7 @@ com\gilede\livraria\service\AuthService.class
 com\gilede\livraria\service\NotificationService.class
 com\gilede\livraria\dto\OrderDTOs$CartItemResponse.class
 com\gilede\livraria\model\Order$OrderBuilder.class
+com\gilede\livraria\repository\UserProfileRepository.class
 com\gilede\livraria\dto\AuthDTOs$LoginResponse.class
 com\gilede\livraria\exception\GlobalExceptionHandler$ErrorResponse.class
 com\gilede\livraria\service\BookService.class
@@ -55,6 +56,7 @@ com\gilede\livraria\model\Role.class
 com\gilede\livraria\controller\MlWebhookController.class
 com\gilede\livraria\controller\HealthController.class
 com\gilede\livraria\model\MercadoLivreConfig$MercadoLivreConfigBuilder.class
+com\gilede\livraria\model\UserProfile.class
 com\gilede\livraria\model\OrderItem.class
 com\gilede\livraria\controller\AdminController.class
 com\gilede\livraria\dto\BookDTOs$BookResponse.class
@@ -85,10 +87,14 @@ com\gilede\livraria\dto\BookDTOs$StatusRequest.class
 com\gilede\livraria\config\AppConfig.class
 com\gilede\livraria\service\MercadoLivreService.class
 com\gilede\livraria\dto\OrderDTOs.class
+com\gilede\livraria\model\UserProfile$UserProfileBuilder.class
 com\gilede\livraria\model\Notification.class
+com\gilede\livraria\model\Address.class
+com\gilede\livraria\repository\AddressRepository.class
 com\gilede\livraria\dto\OrderDTOs$CartItemRequest.class
 com\gilede\livraria\service\OrderService$1.class
 com\gilede\livraria\dto\OrderDTOs$AddressRequest.class
 com\gilede\livraria\model\Review.class
+com\gilede\livraria\model\Address$AddressBuilder.class
 com\gilede\livraria\dto\MercadoLivreDTOs$ItemDescription.class
 com\gilede\livraria\dto\OrderDTOs$UpdateStatusRequest.class
