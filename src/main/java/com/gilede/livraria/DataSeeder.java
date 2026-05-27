@@ -53,7 +53,7 @@ public class DataSeeder implements CommandLineRunner {
                                         .role(Role.ADMIN)
                                         .build();
                         userRepository.save(admin);
-                        System.out.println("SENHA DO ADMIN RESETADA COM SUCESSO PARA: " + ADMIN_SEED_PASSWORD);
+                        log.info("Admin criado pela primeira vez com sucesso.");
                 }
 
         // Cliente padrão exigido pelo frontend
