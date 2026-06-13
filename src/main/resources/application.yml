@@ -45,6 +45,9 @@ ml:
   client-secret: ${ML_CLIENT_SECRET:}
   redirect-uri: ${ML_REDIRECT_URI:}
 
+mp:
+  access-token: ${MP_ACCESS_TOKEN:}
+
 logging:
   level:
     com.gilede: INFO

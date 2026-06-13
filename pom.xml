@@ -80,6 +80,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Mercado Pago -->
+        <dependency>
+            <groupId>com.mercadopago</groupId>
+            <artifactId>sdk-java</artifactId>
+            <version>2.1.28</version>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

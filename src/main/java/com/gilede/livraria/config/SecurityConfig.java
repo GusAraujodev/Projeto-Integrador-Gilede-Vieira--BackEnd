@@ -94,6 +94,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/auth/profile/address").authenticated()
 
                         // Qualquer outra rota requer autenticação
+                        .requestMatchers(HttpMethod.POST, "/orders/*/payment").authenticated()
+                        .requestMatchers(HttpMethod.GET,  "/orders/*").authenticated()
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

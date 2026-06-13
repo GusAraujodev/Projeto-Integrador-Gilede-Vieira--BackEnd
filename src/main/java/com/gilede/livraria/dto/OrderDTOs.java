@@ -52,6 +52,7 @@ public class OrderDTOs {
             @NotBlank String customerPhone,
             @NotNull @Valid AddressRequest address,
             @NotBlank String paymentMethod,
+            BigDecimal shippingCost,
             BigDecimal discount,
             String couponCode) {
     }

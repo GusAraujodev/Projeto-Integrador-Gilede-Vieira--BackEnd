@@ -1,7 +1,9 @@
 package com.gilede.livraria.controller;
 
 import com.gilede.livraria.dto.OrderDTOs;
+import com.gilede.livraria.model.Order;
 import com.gilede.livraria.service.OrderService;
+import com.gilede.livraria.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -11,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -19,6 +22,7 @@ import java.util.UUID;
 public class OrderController {
 
     private final OrderService orderService;
+    private final PaymentService paymentService;
 
     /** GET /orders — Admin: todos os pedidos */
     @GetMapping
@@ -47,6 +51,17 @@ public class OrderController {
             Authentication authentication,
             @Valid @RequestBody OrderDTOs.CreateOrderRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(orderService.create(authentication, request));
+    }
+
+    @PostMapping("/{id}/payment")
+    public ResponseEntity<Map<String, String>> createPayment(@PathVariable UUID id) {
+        try {
+            Order order = orderService.findOrderEntityById(id);
+            String url = paymentService.createPreference(order);
+            return ResponseEntity.ok(Map.of("checkoutUrl", url));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
     }
 
     /** PATCH /orders/{id}/status — Admin: alterar status e gerar notificação */

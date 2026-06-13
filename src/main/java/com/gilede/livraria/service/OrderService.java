@@ -45,6 +45,12 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
+    public Order findOrderEntityById(UUID id) {
+        return orderRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado: " + id));
+    }
+
+    @Transactional(readOnly = true)
     public List<OrderDTOs.OrderResponse> findByUserId(UUID userId) {
         return orderRepository.findByUserIdOrderByCreatedAtDesc(userId)
                 .stream().map(orderMapper::toResponse).toList();
@@ -125,6 +131,10 @@ public class OrderService {
                 .status(OrderStatus.PENDING)
                 .items(new ArrayList<>())
                 .build();
+
+        BigDecimal shipping = request.shippingCost() != null ? request.shippingCost() : BigDecimal.ZERO;
+        order.setShippingCost(shipping);
+        order.setTotal(order.getTotal().add(shipping));
 
         // Associa itens ao pedido
         for (OrderItem item : items) {
