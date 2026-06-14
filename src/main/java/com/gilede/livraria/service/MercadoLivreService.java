@@ -43,7 +43,6 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class MercadoLivreService {
 
-    private static final String SELLER_ID = "532947791";
     private static final int SEARCH_PAGE_SIZE = 50;
     private static final int BATCH_SIZE = 20;
     private static final long RATE_LIMIT_DELAY_MS = 50L;
@@ -179,7 +178,6 @@ public class MercadoLivreService {
         if (tokenResponse.userId() != null && tokenResponse.userId() > 0) {
             config.setSellerId(tokenResponse.userId().toString());
         } else if (!StringUtils.hasText(config.getSellerId())) {
-            config.setSellerId(SELLER_ID);
             config.setSellerId(sellerId);
         }
 
@@ -207,7 +205,6 @@ public class MercadoLivreService {
 
     private MercadoLivreConfig getConfigOrThrow() {
         return configRepository.findTopByOrderByIdDesc()
-                .orElseThrow(() -> new IllegalStateException("Mercado Livre não conectado para o seller " + SELLER_ID));
                 .orElseThrow(() -> new IllegalStateException("Mercado Livre não conectado para o seller " + sellerId));
     }
 
@@ -243,7 +240,6 @@ public class MercadoLivreService {
     }
 
     private List<String> fetchActiveItemIds(String accessToken) {
-        log.info("Fetching active Mercado Livre item ids for seller {}", SELLER_ID);
         log.info("Fetching active Mercado Livre item ids for seller {}", sellerId);
         Set<String> itemIds = new LinkedHashSet<>();
         int offset = 0;
