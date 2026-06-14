@@ -2,8 +2,6 @@ package com.gilede.livraria.service;
 
 import com.mercadopago.MercadoPagoConfig;
 import com.mercadopago.client.preference.*;
-import com.mercadopago.client.preference.PreferencePaymentMethodsRequest;
-import com.mercadopago.client.preference.PreferencePaymentTypeRequest;
 import com.mercadopago.resources.preference.Preference;
 import com.gilede.livraria.model.Order;
 import com.gilede.livraria.model.OrderItem;
@@ -44,22 +42,9 @@ public class PaymentService {
                     .build());
         }
 
-        PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                .success(frontendUrl + "/pedido/" + order.getId())
-                .failure(frontendUrl + "/checkout")
-                .pending(frontendUrl + "/pedido/" + order.getId())
-                .build();
-
         PreferenceRequest request = PreferenceRequest.builder()
                 .items(items)
-                .backUrls(backUrls)
-                .autoReturn("approved")
                 .externalReference(order.getId().toString())
-                .paymentMethods(PreferencePaymentMethodsRequest.builder()
-                        .excludedPaymentTypes(List.of(
-                                PreferencePaymentTypeRequest.builder().id("ticket").build()
-                        ))
-                        .build())
                 .build();
 
         try {

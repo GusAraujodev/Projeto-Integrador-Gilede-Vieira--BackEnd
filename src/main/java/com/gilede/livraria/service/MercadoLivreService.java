@@ -62,6 +62,9 @@ public class MercadoLivreService {
     @Value("${ml.client-secret:}")
     private String clientSecret;
 
+    @Value("${ml.seller-id}")
+    private String sellerId;
+
     @Value("${ml.redirect-uri:}")
     private String redirectUri;
 
@@ -177,6 +180,7 @@ public class MercadoLivreService {
             config.setSellerId(tokenResponse.userId().toString());
         } else if (!StringUtils.hasText(config.getSellerId())) {
             config.setSellerId(SELLER_ID);
+            config.setSellerId(sellerId);
         }
 
         config.setAccessToken(tokenResponse.accessToken());
@@ -204,6 +208,7 @@ public class MercadoLivreService {
     private MercadoLivreConfig getConfigOrThrow() {
         return configRepository.findTopByOrderByIdDesc()
                 .orElseThrow(() -> new IllegalStateException("Mercado Livre não conectado para o seller " + SELLER_ID));
+                .orElseThrow(() -> new IllegalStateException("Mercado Livre não conectado para o seller " + sellerId));
     }
 
     private TokenResponse requestToken(MultiValueMap<String, String> form) {
@@ -239,6 +244,7 @@ public class MercadoLivreService {
 
     private List<String> fetchActiveItemIds(String accessToken) {
         log.info("Fetching active Mercado Livre item ids for seller {}", SELLER_ID);
+        log.info("Fetching active Mercado Livre item ids for seller {}", sellerId);
         Set<String> itemIds = new LinkedHashSet<>();
         int offset = 0;
 
