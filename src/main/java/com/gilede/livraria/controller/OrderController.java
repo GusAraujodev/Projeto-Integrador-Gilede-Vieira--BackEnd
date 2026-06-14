@@ -5,6 +5,7 @@ import com.gilede.livraria.model.Order;
 import com.gilede.livraria.service.OrderService;
 import com.gilede.livraria.service.PaymentService;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/orders")
 @RequiredArgsConstructor
+@Slf4j
 public class OrderController {
 
     private final OrderService orderService;
@@ -60,7 +62,9 @@ public class OrderController {
             String url = paymentService.createPreference(order);
             return ResponseEntity.ok(Map.of("checkoutUrl", url));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+            log.error("Erro ao criar preferência de pagamento para pedido {}: {}", id, e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "Erro desconhecido"));
         }
     }
 

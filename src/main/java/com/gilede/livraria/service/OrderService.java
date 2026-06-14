@@ -46,8 +46,11 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public Order findOrderEntityById(UUID id) {
-        return orderRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Pedido não encontrado: " + id));
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pedido não encontrado: " + id));
+        // força inicialização dos items dentro da transação
+        order.getItems().size();
+        return order;
     }
 
     @Transactional(readOnly = true)
@@ -113,17 +116,17 @@ public class OrderService {
         UUID resolvedUserId = resolveAuthenticatedUserId(authentication);
 
         Order order = Order.builder()
-            .userId(resolvedUserId)
+                .userId(resolvedUserId)
                 .customerName(request.customerName())
                 .customerEmail(request.customerEmail())
                 .customerPhone(request.customerPhone())
-            .addressStreet(address.street())
-            .addressNumber(address.number())
-            .addressComplement(address.complement())
-            .addressNeighborhood(address.neighborhood())
-            .addressCity(address.city())
-            .addressState(address.state())
-            .addressZipCode(address.zipCode())
+                .addressStreet(address.street())
+                .addressNumber(address.number())
+                .addressComplement(address.complement())
+                .addressNeighborhood(address.neighborhood())
+                .addressCity(address.city())
+                .addressState(address.state())
+                .addressZipCode(address.zipCode())
                 .paymentMethod(paymentMethod)
                 .total(total)
                 .discount(discount)

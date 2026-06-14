@@ -1,3 +1,4 @@
+com\gilede\livraria\service\PaymentService.class
 com\gilede\livraria\config\JwtAuthenticationFilter.class
 com\gilede\livraria\repository\FavoriteRepository.class
 com\gilede\livraria\dto\AuthDTOs$LoginRequest.class
@@ -25,6 +26,7 @@ com\gilede\livraria\dto\OrderDTOs$CreateOrderRequest.class
 com\gilede\livraria\scheduler\MercadoLivreScheduler.class
 com\gilede\livraria\model\User$UserBuilder.class
 com\gilede\livraria\config\JwtService.class
+com\gilede\livraria\dto\AuthDTOs$UpdateContactRequest.class
 com\gilede\livraria\dto\FavoriteDTOs$AddFavoriteRequest.class
 com\gilede\livraria\dto\BookDTOs$MlSyncItem.class
 com\gilede\livraria\controller\OrderController.class
@@ -91,6 +93,7 @@ com\gilede\livraria\model\UserProfile$UserProfileBuilder.class
 com\gilede\livraria\model\Notification.class
 com\gilede\livraria\model\Address.class
 com\gilede\livraria\repository\AddressRepository.class
+com\gilede\livraria\dto\AuthDTOs$UpdateAddressRequest.class
 com\gilede\livraria\dto\OrderDTOs$CartItemRequest.class
 com\gilede\livraria\service\OrderService$1.class
 com\gilede\livraria\dto\OrderDTOs$AddressRequest.class

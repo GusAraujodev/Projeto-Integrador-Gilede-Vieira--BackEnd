@@ -17,26 +17,52 @@ public class PaymentService {
     @Value("${mp.access-token}")
     private String accessToken;
 
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
+
     public String createPreference(Order order) throws Exception {
         MercadoPagoConfig.setAccessToken(accessToken);
 
         List<PreferenceItemRequest> items = order.getItems().stream()
-            .map(item -> PreferenceItemRequest.builder()
-                .title(item.getBook().getTitle())
-                .quantity(item.getQuantity())
-                .unitPrice(item.getUnitPrice())
-                .currencyId("BRL")
-                .build())
-            .collect(Collectors.toList());
+                .map(item -> PreferenceItemRequest.builder()
+                        .title(item.getBook().getTitle())
+                        .quantity(item.getQuantity())
+                        .unitPrice(item.getUnitPrice())
+                        .currencyId("BRL")
+                        .build())
+                .collect(Collectors.toList());
+
+        if (order.getShippingCost() != null &&
+                order.getShippingCost().compareTo(BigDecimal.ZERO) > 0) {
+            items.add(PreferenceItemRequest.builder()
+                    .title("Frete")
+                    .quantity(1)
+                    .unitPrice(order.getShippingCost())
+                    .currencyId("BRL")
+                    .build());
+        }
+
+        PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
+                .success(frontendUrl + "/pedido/" + order.getId())
+                .failure(frontendUrl + "/checkout")
+                .pending(frontendUrl + "/pedido/" + order.getId())
+                .build();
 
         PreferenceRequest request = PreferenceRequest.builder()
-            .items(items)
-            .externalReference(order.getId().toString())
-            .autoReturn("approved")
-            .build();
+                .items(items)
+                .backUrls(backUrls)
+                .externalReference(order.getId().toString())
+                .autoReturn("approved")
+                .build();
 
-        PreferenceClient client = new PreferenceClient();
-        Preference preference = client.create(request);
-        return preference.getInitPoint();
+        try {
+            PreferenceClient client = new PreferenceClient();
+            Preference preference = client.create(request);
+            return preference.getInitPoint();
+        } catch (com.mercadopago.exceptions.MPApiException e) {
+            String body = e.getApiResponse() != null ? e.getApiResponse().getContent() : "sem body";
+            int status = e.getApiResponse() != null ? e.getApiResponse().getStatusCode() : -1;
+            throw new RuntimeException("MP API Error [" + status + "]: " + body, e);
+        }
     }
 }

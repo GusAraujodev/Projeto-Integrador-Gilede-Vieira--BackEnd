@@ -94,8 +94,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/auth/profile/address").authenticated()
 
                         // Qualquer outra rota requer autenticação
-                        .requestMatchers(HttpMethod.POST, "/orders/*/payment").authenticated()
-                        .requestMatchers(HttpMethod.GET,  "/orders/*").authenticated()
+                        // O uso de /** permite que o Spring entenda que existem pastas (IDs) entre
+                        // /orders e /payment
+                        .requestMatchers(HttpMethod.POST, "/orders/{id}/payment").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/orders/**").authenticated()
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
