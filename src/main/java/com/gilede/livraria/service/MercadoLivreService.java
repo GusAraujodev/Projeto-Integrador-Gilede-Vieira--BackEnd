@@ -338,7 +338,9 @@ public class MercadoLivreService {
                 book.getPages());
         String category = firstText(book.getCategory(), item.categoryId(), "Mercado Livre");
         BigDecimal price = item.price() != null ? item.price() : book.getPrice();
-        Double rating = item.health() != null ? Math.max(0.0, Math.min(5.0, item.health() * 5.0)) : book.getRating();
+        Double rating = item.health() != null
+                ? Math.max(0.0, Math.min(5.0, item.health() * 5.0))
+                : (book.getRating() != null ? book.getRating() : 0.0);
 
         book.setTitle(firstText(item.title(), book.getTitle(), "Mercado Livre"));
         book.setAuthor(author);
