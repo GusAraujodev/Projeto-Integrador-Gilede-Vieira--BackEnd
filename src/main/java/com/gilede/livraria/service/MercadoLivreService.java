@@ -302,15 +302,19 @@ public class MercadoLivreService {
     }
 
     private String fetchDescription(String itemId, String accessToken) {
-        ResponseEntity<ItemDescription> response = restTemplate.exchange(
-                ITEM_DESCRIPTION_URL.formatted(itemId),
-                HttpMethod.GET,
-                new HttpEntity<>(authHeaders(accessToken)),
-                ItemDescription.class);
-
-        return Optional.ofNullable(response.getBody())
-                .map(ItemDescription::plainText)
-                .orElse("");
+        try {
+            ResponseEntity<ItemDescription> response = restTemplate.exchange(
+                    ITEM_DESCRIPTION_URL.formatted(itemId),
+                    HttpMethod.GET,
+                    new HttpEntity<>(authHeaders(accessToken)),
+                    ItemDescription.class);
+            return Optional.ofNullable(response.getBody())
+                    .map(ItemDescription::plainText)
+                    .orElse("");
+        } catch (Exception e) {
+            log.warn("Descrição não encontrada para item {}: {}", itemId, e.getMessage());
+            return "";
+        }
     }
 
     private HttpHeaders authHeaders(@NonNull String accessToken) {
