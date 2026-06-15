@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +28,7 @@ public class BookService {
     // ---- Área pública ----
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "books", key = "'active_' + (#search != null ? #search : 'all')")
     public List<BookDTOs.BookResponse> findAllActive(String search) {
         List<Book> books;
 
@@ -54,6 +57,7 @@ public class BookService {
     // ---- Área administrativa ----
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "books", key = "'all'")
     public List<BookDTOs.BookResponse> findAll() {
         return bookRepository.findAll().stream().map(bookMapper::toResponse).toList();
     }
@@ -120,13 +124,13 @@ public class BookService {
             Book book;
             if (existingBook.isPresent()) {
                 book = existingBook.get();
-            book.setTitle(item.title());
+                book.setTitle(item.title());
                 book.setDescription(item.description());
                 book.setCategory(item.category());
-            book.setPrice(item.price());
-            book.setStock(item.available_quantity());
-            book.setImages(images);
-            book.setMlSynced(true);
+                book.setPrice(item.price());
+                book.setStock(item.available_quantity());
+                book.setImages(images);
+                book.setMlSynced(true);
                 book.setSalesCount(item.soldQuantity() != null ? item.soldQuantity() : book.getSalesCount());
                 book.setRating(item.health() != null ? item.health().doubleValue() : book.getRating());
             } else {

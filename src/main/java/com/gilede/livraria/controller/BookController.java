@@ -25,10 +25,17 @@ public class BookController {
      * Admin acessa GET /admin/books para ver todos (incluindo inativos).
      */
     @GetMapping
-    public ResponseEntity<List<BookDTOs.BookResponse>> findAll(
-            @RequestParam(required = false) String search) {
+public ResponseEntity<List<BookDTOs.BookResponse>> getAll(
+        @RequestParam(required = false) String search) {
+    
+    // Se tem search, usa findAllActive (com cache por search)
+    // Se não tem search, usa findAll (cache geral)
+    if (search != null && !search.isBlank()) {
         return ResponseEntity.ok(bookService.findAllActive(search));
+    } else {
+        return ResponseEntity.ok(bookService.findAll());
     }
+}
 
     /**
      * GET /books/{id}

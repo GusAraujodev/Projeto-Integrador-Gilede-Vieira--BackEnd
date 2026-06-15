@@ -19,7 +19,6 @@ com\gilede\livraria\dto\DashboardDTOs$StockAlertResponse.class
 com\gilede\livraria\controller\NotificationController.class
 com\gilede\livraria\dto\AuthDTOs.class
 com\gilede\livraria\dto\BookDTOs.class
-com\gilede\livraria\controller\MlWebhookController$MlWebhookPayload.class
 com\gilede\livraria\service\FavoritesService.class
 com\gilede\livraria\LivrariaApplication.class
 com\gilede\livraria\dto\OrderDTOs$CreateOrderRequest.class
@@ -29,7 +28,6 @@ com\gilede\livraria\config\JwtService.class
 com\gilede\livraria\dto\AuthDTOs$UpdateContactRequest.class
 com\gilede\livraria\dto\FavoriteDTOs$AddFavoriteRequest.class
 com\gilede\livraria\dto\BookDTOs$MlSyncItem.class
-com\gilede\livraria\controller\OrderController.class
 com\gilede\livraria\dto\MercadoLivreDTOs$Attribute.class
 com\gilede\livraria\mapper\OrderMapper.class
 com\gilede\livraria\dto\BookDTOs$MlPicture.class
@@ -47,20 +45,16 @@ com\gilede\livraria\model\Order$OrderBuilder.class
 com\gilede\livraria\repository\UserProfileRepository.class
 com\gilede\livraria\dto\AuthDTOs$LoginResponse.class
 com\gilede\livraria\exception\GlobalExceptionHandler$ErrorResponse.class
-com\gilede\livraria\service\BookService.class
 com\gilede\livraria\dto\MercadoLivreDTOs$ItemDetail.class
 com\gilede\livraria\dto\DashboardDTOs$DashboardStatsResponse.class
 com\gilede\livraria\dto\OrderDTOs$AddressResponse.class
 com\gilede\livraria\dto\MercadoLivreDTOs$BatchItemResult.class
-com\gilede\livraria\service\OrderService.class
 com\gilede\livraria\config\SecurityConfig.class
 com\gilede\livraria\model\Role.class
-com\gilede\livraria\controller\MlWebhookController.class
 com\gilede\livraria\controller\HealthController.class
 com\gilede\livraria\model\MercadoLivreConfig$MercadoLivreConfigBuilder.class
 com\gilede\livraria\model\UserProfile.class
 com\gilede\livraria\model\OrderItem.class
-com\gilede\livraria\controller\AdminController.class
 com\gilede\livraria\dto\BookDTOs$BookResponse.class
 com\gilede\livraria\dto\BookDTOs$StockRequest.class
 com\gilede\livraria\exception\GlobalExceptionHandler.class
@@ -77,7 +71,6 @@ com\gilede\livraria\repository\MercadoLivreConfigRepository.class
 com\gilede\livraria\controller\AuthController.class
 com\gilede\livraria\model\Favorite.class
 com\gilede\livraria\dto\FavoriteDTOs.class
-com\gilede\livraria\controller\BookController.class
 com\gilede\livraria\dto\NotificationDTOs$NotificationResponse.class
 com\gilede\livraria\model\MercadoLivreConfig.class
 com\gilede\livraria\model\Order.class
