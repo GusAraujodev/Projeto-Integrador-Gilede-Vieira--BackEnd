@@ -43,13 +43,14 @@ public class MercadoLivreController {
 
     @GetMapping("/auth-url")
     public ResponseEntity<Map<String, String>> authUrl() {
-        String authorizationUrl = UriComponentsBuilder.fromHttpUrl(AUTHORIZATION_BASE_URL)
-                .queryParam("response_type", "code")
-                .queryParam("client_id", clientId)
-                .queryParam("redirect_uri", redirectUri)
-            .queryParam("access_type", "offline")
-                .build(true)
-                .toUriString();
+     String authorizationUrl = UriComponentsBuilder.fromHttpUrl(AUTHORIZATION_BASE_URL)
+    .queryParam("response_type", "code")
+    .queryParam("client_id", clientId)
+    .queryParam("redirect_uri", redirectUri)
+    .queryParam("access_type", "offline")
+    .queryParam("scope", "offline_access")
+    .build(true)
+    .toUriString();
 
         return ResponseEntity.ok(Map.of(
                 "authorizationUrl", authorizationUrl,

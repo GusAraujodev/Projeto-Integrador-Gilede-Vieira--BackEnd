@@ -124,7 +124,8 @@ public class MercadoLivreService {
             List<BatchItemResult> batchResults = fetchBatchItems(batch, accessToken);
 
             for (BatchItemResult result : batchResults) {
-                if (result == null || result.code() == null || result.code() < 200 || result.code() >= 300 || result.body() == null) {
+                if (result == null || result.code() == null || result.code() < 200 || result.code() >= 300
+                        || result.body() == null) {
                     continue;
                 }
 
@@ -160,8 +161,7 @@ public class MercadoLivreService {
                 ITEM_BATCH_URL + "/" + itemId,
                 HttpMethod.GET,
                 new HttpEntity<>(authHeaders(accessToken)),
-                ItemDetail.class
-        );
+                ItemDetail.class);
 
         ItemDetail item = response.getBody();
         if (item == null || !StringUtils.hasText(item.id())) {
@@ -174,7 +174,8 @@ public class MercadoLivreService {
     private MercadoLivreConfig saveTokens(@NonNull TokenResponse tokenResponse) {
         MercadoLivreConfig config = configRepository.findTopByOrderByIdDesc().orElseGet(MercadoLivreConfig::new);
 
-        // Usar o userId real retornado pelo ML; só cai no SELLER_ID hardcoded como fallback
+        // Usar o userId real retornado pelo ML; só cai no SELLER_ID hardcoded como
+        // fallback
         if (tokenResponse.userId() != null && tokenResponse.userId() > 0) {
             config.setSellerId(tokenResponse.userId().toString());
         } else if (!StringUtils.hasText(config.getSellerId())) {
@@ -189,10 +190,8 @@ public class MercadoLivreService {
             config.setRefreshToken(tokenResponse.refreshToken());
         }
 
-        // Só falha se for primeira autenticação e não tiver refresh_token em lugar nenhum
         if (!StringUtils.hasText(config.getRefreshToken())) {
-            throw new IllegalStateException(
-                    "Primeira autorização não retornou refresh_token. Verifique se o fluxo OAuth está usando authorization_code.");
+            log.warn("Refresh token não recebido do Mercado Livre. O token será renovado manualmente se necessário.");
         }
 
         long expiresIn = tokenResponse.expiresIn() != null ? tokenResponse.expiresIn() : 3600L;
@@ -215,8 +214,7 @@ public class MercadoLivreService {
         ResponseEntity<TokenResponse> response = restTemplate.postForEntity(
                 TOKEN_URL,
                 new HttpEntity<>(form, headers),
-                TokenResponse.class
-        );
+                TokenResponse.class);
 
         TokenResponse body = response.getBody();
         if (body == null || !StringUtils.hasText(body.accessToken())) {
@@ -281,8 +279,7 @@ public class MercadoLivreService {
                 url,
                 HttpMethod.GET,
                 new HttpEntity<>(authHeaders(accessToken)),
-                ItemSearchResponse.class
-        );
+                ItemSearchResponse.class);
 
         return response.getBody();
     }
@@ -297,8 +294,7 @@ public class MercadoLivreService {
                 url,
                 HttpMethod.GET,
                 new HttpEntity<>(authHeaders(accessToken)),
-                BatchItemResult[].class
-        );
+                BatchItemResult[].class);
 
         return Optional.ofNullable(response.getBody())
                 .map(Arrays::asList)
@@ -310,8 +306,7 @@ public class MercadoLivreService {
                 ITEM_DESCRIPTION_URL.formatted(itemId),
                 HttpMethod.GET,
                 new HttpEntity<>(authHeaders(accessToken)),
-                ItemDescription.class
-        );
+                ItemDescription.class);
 
         return Optional.ofNullable(response.getBody())
                 .map(ItemDescription::plainText)
@@ -333,17 +328,14 @@ public class MercadoLivreService {
                 extractAttribute(item.attributes(), "AUTHOR_NAME"),
                 extractAttribute(item.attributes(), "BRAND"),
                 book.getAuthor(),
-                "Mercado Livre"
-        );
+                "Mercado Livre");
         String isbn = firstText(extractAttribute(item.attributes(), "ISBN"), book.getIsbn());
         String publisher = firstText(
-            extractAttribute(item.attributes(), "PUBLISHER", "BOOK_PUBLISHER", "PUBLICATION_NAME"),
-            book.getPublisher()
-        );
+                extractAttribute(item.attributes(), "PUBLISHER", "BOOK_PUBLISHER", "PUBLICATION_NAME"),
+                book.getPublisher());
         Integer pages = firstInteger(
-            extractIntegerAttribute(item.attributes(), "PAGES", "BOOK_PAGES", "PAGE_COUNT"),
-            book.getPages()
-        );
+                extractIntegerAttribute(item.attributes(), "PAGES", "BOOK_PAGES", "PAGE_COUNT"),
+                book.getPages());
         String category = firstText(book.getCategory(), item.categoryId(), "Mercado Livre");
         BigDecimal price = item.price() != null ? item.price() : book.getPrice();
         Double rating = item.health() != null ? Math.max(0.0, Math.min(5.0, item.health() * 5.0)) : book.getRating();
